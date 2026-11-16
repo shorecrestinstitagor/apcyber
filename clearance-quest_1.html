@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Clearance Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: an ID-badge console. Sticky mission rail on top, one mission card at a time, briefing then game. */
+:root {
+  --bg: #F3F5F7; --panel: #FFFFFF; --ink: #17222E; --muted: #5B6875; --line: #D6DEE6;
+  --navy: #14324A; --teal: #0F766E; --teal-soft: #DDF0EE; --rust: #B4532A; --rust-soft: #F6E3DA;
+  --gold: #A9781E; --gold-soft: #F5ECDA; --slate: #3B5B8C; --slate-soft: #E1E8F3; --plum: #5B4B8A;
+  --ts: #B4532A; --s: #A9781E; --c: #3B5B8C; --u: #0F766E;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1720; --panel: #17222E; --ink: #E7EDF3; --muted: #9AA8B6; --line: #2A3847;
+  --navy: #9CC3E6; --teal: #4FC1B4; --teal-soft: #12332F; --rust: #E58A63; --rust-soft: #3A2118;
+  --gold: #E0B45E; --gold-soft: #33280F; --slate: #8FAEDD; --slate-soft: #1C2A3F; --plum: #B3A4E6;
+  --ts: #E58A63; --s: #E0B45E; --c: #8FAEDD; --u: #4FC1B4; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0F1720; --panel: #17222E; --ink: #E7EDF3; --muted: #9AA8B6; --line: #2A3847;
+  --navy: #9CC3E6; --teal: #4FC1B4; --teal-soft: #12332F; --rust: #E58A63; --rust-soft: #3A2118;
+  --gold: #E0B45E; --gold-soft: #33280F; --slate: #8FAEDD; --slate-soft: #1C2A3F; --plum: #B3A4E6;
+  --ts: #E58A63; --s: #E0B45E; --c: #8FAEDD; --u: #4FC1B4; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+.wrap { max-width: 960px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+p { margin: 0 }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--slate); outline-offset: 2px; }
+
+/* top rail */
+.rail { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); }
+.rail .wrap { display: flex; align-items: center; gap: 14px; padding-block: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 800; font-size: 18px; color: var(--navy); letter-spacing: .01em; display: flex; align-items: center; gap: 8px; }
+.brand .chip { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; letter-spacing: .06em; }
+.badges { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.badge { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--line); background: var(--bg); color: var(--muted); font-family: var(--mono); font-weight: 600; font-size: 13px; display: grid; place-items: center; }
+.badge.on { border-color: var(--navy); color: var(--navy); }
+.badge.done { background: var(--teal); border-color: var(--teal); color: var(--panel); }
+.badge:disabled { cursor: not-allowed; opacity: .55 }
+
+main { padding-block: 28px 64px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+.stack { display: flex; flex-direction: column; gap: 18px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 18px; color: var(--muted); max-width: 62ch; }
+.btn { border: 0; border-radius: 10px; padding: 12px 18px; font-weight: 600; background: var(--navy); color: var(--panel); }
+.btn.ghost { background: transparent; color: var(--navy); border: 1.5px solid var(--navy); }
+.btn:disabled { opacity: .45; cursor: not-allowed }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+/* home */
+.hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; align-items: center; }
+.hero h1 { font-size: clamp(34px, 6vw, 56px); color: var(--navy); font-weight: 800; }
+.idcard { border-radius: 16px; background: var(--navy); color: var(--panel); padding: 20px; display: grid; gap: 10px; min-width: 0; }
+:root[data-theme="dark"] .idcard { color: #0F1720 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .idcard { color: #0F1720 } }
+.idcard .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .8 }
+.idcard input { width: 100%; font: 600 18px var(--body); padding: 10px 12px; border-radius: 8px; border: 0; background: var(--panel); color: var(--ink); }
+.idcard .lv { display: flex; gap: 4px; }
+.idcard .lv span { flex: 1; height: 8px; border-radius: 3px; }
+.mlist { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.mitem { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); min-width: 0; }
+.mitem .n { font-family: var(--mono); font-weight: 600; color: var(--panel); background: var(--slate); border-radius: 8px; width: 34px; height: 34px; display: grid; place-items: center; flex: none; }
+.mitem.done .n { background: var(--teal) }
+.mitem b { display: block; font-family: var(--display); }
+.mitem small { color: var(--muted); font-size: 14px; }
+.howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.howto div { padding: 14px; border-radius: 12px; background: var(--slate-soft); font-size: 15px; }
+.howto b { display: block; font-family: var(--display); color: var(--slate); }
+
+/* briefing */
+.brief { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.bcard { border-radius: 12px; padding: 16px; background: var(--bg); border: 1px solid var(--line); min-width: 0; }
+.bcard h3 { font-size: 17px; margin-bottom: 6px; }
+.bcard p { font-size: 15px; }
+.bcard .ex { margin-top: 8px; font-size: 14px; color: var(--muted); font-style: italic; }
+.quote { border-radius: 12px; padding: 18px 20px; background: var(--navy); color: var(--panel); font-family: var(--display); font-size: 20px; font-weight: 500; }
+:root[data-theme="dark"] .quote { color: #0F1720 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .quote { color: #0F1720 } }
+.quote small { display: block; font-family: var(--mono); font-size: 12px; margin-top: 6px; opacity: .8 }
+.tag { display: inline-block; font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--slate-soft); color: var(--slate); }
+details.review { border: 1px dashed var(--line); border-radius: 12px; padding: 10px 14px; }
+details.review summary { cursor: pointer; font-weight: 600; color: var(--slate); }
+details.review[open] summary { margin-bottom: 12px; }
+
+/* ladder */
+.ladder { display: grid; gap: 6px; }
+.ladder div { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; color: var(--panel); font-weight: 600; font-size: 15px; }
+:root[data-theme="dark"] .ladder div { color: #0F1720 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ladder div { color: #0F1720 } }
+.wurd { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 4px; font-size: 14px; }
+.wurd span { padding: 6px 8px; border-radius: 6px; background: var(--bg); text-align: center; }
+.wurd .h { font-weight: 700; background: transparent }
+.wurd .y { background: var(--teal-soft); color: var(--teal); font-weight: 600 }
+.wurd .n { background: var(--rust-soft); color: var(--rust); font-weight: 600 }
+.wurd .me { background: var(--navy); color: var(--panel); font-weight: 700 }
+
+/* game */
+.gamehead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.meter { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--teal); transition: width .3s; }
+.dossier { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.dossier div { padding: 10px 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); min-width: 0; }
+.dossier .k { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: block; }
+.dossier .v { font-weight: 600; font-size: 15px; }
+.dossier .rule { grid-column: 1 / -1; background: var(--gold-soft); border-color: transparent; }
+.prompt { font-family: var(--display); font-size: 21px; font-weight: 700; }
+.opts { display: grid; gap: 10px; }
+.opts.cols { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.opt { text-align: left; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--panel); color: var(--ink); font-size: 16px; transition: border-color .15s, background .15s; }
+.opt:hover:not(:disabled) { border-color: var(--slate); }
+.opt.right { border-color: var(--teal); background: var(--teal-soft); }
+.opt.wrong { border-color: var(--rust); background: var(--rust-soft); }
+.opt:disabled { cursor: default }
+.opt.big { text-align: center; font-family: var(--display); font-weight: 700; font-size: 20px; padding: 18px; }
+.fb { border-radius: 12px; padding: 14px 16px; font-size: 15px; }
+.fb.ok { background: var(--teal-soft); }
+.fb.no { background: var(--rust-soft); }
+.fb b { font-family: var(--display); }
+.shake { animation: shake .3s }
+@keyframes shake { 25% { transform: translateX(-5px) } 75% { transform: translateX(5px) } }
+.access { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 18px; }
+.lvpill { font-family: var(--mono); font-weight: 600; padding: 6px 12px; border-radius: 8px; color: var(--panel); font-size: 15px; }
+:root[data-theme="dark"] .lvpill { color: #0F1720 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lvpill { color: #0F1720 } }
+.verb { font-family: var(--display); font-weight: 800; font-size: 22px; }
+
+/* chips game */
+.sentence { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; min-height: 52px; padding: 12px; border-radius: 12px; background: var(--bg); border: 1px dashed var(--line); }
+.chipb { padding: 10px 14px; border-radius: 999px; border: 1.5px solid var(--slate); background: var(--panel); color: var(--ink); font-weight: 600; }
+.chipb.sel { background: var(--slate); color: var(--panel); }
+.bins { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.bin { min-height: 96px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel); padding: 10px; display: flex; flex-direction: column; gap: 6px; align-items: stretch; text-align: left; color: var(--ink); min-width: 0; }
+.bin .t { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; }
+.bin .d { font-size: 13px; color: var(--muted); }
+.bin.s { border-color: var(--slate) } .bin.s .t { color: var(--slate) }
+.bin.o { border-color: var(--gold) } .bin.o .t { color: var(--gold) }
+.bin.b { border-color: var(--teal) } .bin.b .t { color: var(--teal) }
+.bin .placed { font-weight: 600; font-size: 15px; padding: 6px 10px; border-radius: 8px; background: var(--bg); }
+.bin .placed.bad { background: var(--rust-soft); }
+
+/* finish + report */
+.code { font-family: var(--mono); font-weight: 600; font-size: 34px; letter-spacing: .18em; color: var(--teal); padding: 10px 18px; border: 2px dashed var(--teal); border-radius: 12px; display: inline-block; }
+.score { font-family: var(--display); font-weight: 800; font-size: 44px; color: var(--navy); }
+table.rep { width: 100%; border-collapse: collapse; font-size: 15px; }
+table.rep th, table.rep td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+table.rep td.mono { font-family: var(--mono); font-weight: 600; letter-spacing: .08em; }
+.tbl { overflow-x: auto; }
+.stamp { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .hero { grid-template-columns: 1fr; }
+  .bins { grid-template-columns: 1fr; }
+  .bin { min-height: 64px }
+  .card { padding: 18px }
+  .prompt { font-size: 19px }
+}
+@media (prefers-reduced-motion: reduce) { .shake { animation: none } .bar i { transition: none } }
+</style>
+</head>
+<body>
+
+
+<header class="rail"><div class="wrap">
+  <div class="brand"><a href="index.html" style="color:var(--slate);text-decoration:none;font-family:var(--body);font-weight:600;font-size:14px" aria-label="AP Cybersecurity home">&larr; Home</a> Clearance Quest <span class="chip">CH 2.2</span></div>
+  <nav class="badges" id="badges" aria-label="Missions"></nav>
+</div></header>
+<main><div class="wrap" id="app"></div></main>
+
+<script>
+(function () {
+const LV = { "Top Secret": "var(--ts)", "Secret": "var(--s)", "Confidential": "var(--c)", "Unclassified": "var(--u)" };
+const RANK = { "Top Secret": 3, "Secret": 2, "Confidential": 1, "Unclassified": 0 };
+const dec = (s) => atob(s);
+const ALPH = "ACDEFHJKMNPRTUVWXY3479";
+const norm = (n) => String(n).toLowerCase().replace(/[^a-z]/g, "");
+function pcode(m, name) {
+  let h = 2166136261; const str = norm(name) + "|" + m.id;
+  for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+  return dec(m.code) + "-" + ALPH[h % ALPH.length] + ALPH[(h >>> 7) % ALPH.length];
+}
+
+/* ---------- mission content ---------- */
+const M = [
+{ id: "m1", short: "Decode", title: "Request Decoder", minutes: 5, code: "UEFSU0U=",
+  goal: "Split any access request into subject, operation, and object.",
+  brief: `
+  <p class="lede">Every time someone (or something) tries to use a file or app, the system sees a <b>request</b> with three parts. The AP exam uses these exact words (CED 5.2.C.1).</p>
+  <div class="brief">
+    <div class="bcard"><span class="tag">SUBJECT</span><h3 style="margin-top:8px">Who or what is asking</h3><p>A user <b>or an application</b>. Apps and scripts make requests too.</p><p class="ex">Ms. Kane · the attendance app</p></div>
+    <div class="bcard"><span class="tag">OPERATION</span><h3 style="margin-top:8px">What they want to do</h3><p>Access, modify, add, or remove.</p><p class="ex">view · edit · add a tardy · delete</p></div>
+    <div class="bcard"><span class="tag">OBJECT</span><h3 style="margin-top:8px">What it's done to</h3><p>The file or application being acted on.</p><p class="ex">the gradebook · draft.txt</p></div>
+  </div>
+  <p>Access control models are just different ways to decide <b>which subjects get which operations on which objects</b>.</p>`,
+  game: { type: "chips", items: [
+    ["Ms. Kane", "wants to edit", "the Period 3 gradebook"],
+    ["The attendance app", "adds a tardy to", "Jordan's attendance record"],
+    ["Coach Diaz", "removes a player from", "the team roster"],
+    ["The nightly backup script", "copies (reads)", "the grades database"],
+    ["Leo", "deletes", "draft.txt"],
+  ] } },
+
+{ id: "m2", short: "Keys", title: "Right-Size the Keys", minutes: 12, code: "VFJJTQ==",
+  goal: "Apply least privilege: exactly the access the job needs, and no more.",
+  brief: `
+  <div class="quote">"Entities should be given exactly as much access as they need to perform their function and no more."<small>PRINCIPLE OF LEAST PRIVILEGE · CED 5.2.C.7</small></div>
+  <p>Least privilege does <b>not</b> mean as little as possible. Too little access breaks the job, and people start sharing passwords or setting files to 777. It means <b>just right</b>.</p>
+  <div class="brief">
+    <div class="bcard"><h3>WHAT</h3><p>Which operations? View instead of edit. Edit instead of admin.</p></div>
+    <div class="bcard"><h3>WHICH</h3><p>Which objects? One folder instead of the whole drive.</p></div>
+    <div class="bcard"><h3>HOW LONG</h3><p>For how long? Today only instead of forever.</p></div>
+  </div>
+  <h3>The least privilege toolkit</h3>
+  <div class="brief">
+    <div class="bcard"><h3>Need-to-know</h3><p>You see only the data your task needs, even if your role or clearance would allow more.</p><p class="ex">A counselor opens her own students' files, not every student's.</p></div>
+    <div class="bcard"><h3>Separation of duties</h3><p>No one person can finish a sensitive task alone.</p><p class="ex">Whoever requests a payment can't also approve it.</p></div>
+    <div class="bcard"><h3>Just-in-time (JIT) access</h3><p>Access is granted when needed and expires on its own.</p><p class="ex">The sub's login shuts off at 4 p.m.</p></div>
+    <div class="bcard"><h3>Privileged access management (PAM)</h3><p>Admin accounts are locked away, checked out only when needed, and every use is logged.</p><p class="ex">IT checks out the admin password for one hour.</p></div>
+  </div>`,
+  game: { type: "quiz", shuffle: true, items: [
+    { ctx: acct("Ms. Kane", "One-day substitute for Period 3 Chemistry", "Edit on ALL of Mr. Ortiz's Google Drive. No expiration."), q: "WHAT should Ms. Kane be able to do?", o: ["Edit everything in Mr. Ortiz's drive, just in case", "View the roster and seating chart, and take attendance", "View and edit the gradebook so she can enter today's quiz"], a: 1, why: "A sub needs to run class: who's here and where they sit. Grades aren't part of a one-day sub's job." },
+    { ctx: acct("Ms. Kane", "One-day substitute for Period 3 Chemistry", "Edit on ALL of Mr. Ortiz's Google Drive. No expiration."), q: "WHICH objects?", o: ["All of Mr. Ortiz's classes", "The whole science department drive", "Period 3's roster, seating chart, and sub plans only"], a: 2, why: "Need-to-know: she's covering Period 3, so she gets Period 3." },
+    { ctx: acct("Ms. Kane", "One-day substitute for Period 3 Chemistry", "Edit on ALL of Mr. Ortiz's Google Drive. No expiration."), q: "HOW LONG?", o: ["Until she's needed again", "Expires at 4 p.m. today", "The rest of the semester"], a: 1, why: "Just-in-time access: it turns off on its own when the job ends." },
+    { ctx: acct("Jordan", "Student, and the 3rd-period front office aide", "Edit on the ENTIRE front office shared drive, all day."), q: "WHAT should Jordan be able to do?", o: ["Edit the visitor log and view the forms folder", "View student records so they can help answer phone calls", "Edit everything the front office staff can edit"], a: 0, why: "Student records hold PII and education records. A student aide should never see other students' records." },
+    { ctx: acct("Jordan", "Student, and the 3rd-period front office aide", "Edit on the ENTIRE front office shared drive, all day."), q: "HOW LONG / WHEN?", o: ["All day, from any device", "Only during 3rd period, on the office computer", "Any time for the rest of the year"], a: 1, why: "A time and device rule layered on top of the role. That's rule-based access control (RuBAC), coming up in Mission 5." },
+    { ctx: acct("Alex", "IT summer intern who helps the help desk", "A domain admin account that never expires."), q: "WHAT should Alex get?", o: ["Domain admin, so Alex never gets stuck", "Reset student passwords and view the help desk ticket queue", "Read-only access to every server"], a: 1, why: "An intern on the help desk resets passwords. Domain admin can change anything on the network; if Alex's account is phished, the attacker gets all of it." },
+    { ctx: acct("Alex", "IT summer intern who helps the help desk", "A domain admin account that never expires."), q: "What if Alex sometimes needs admin rights for a task?", o: ["Give Alex the admin password to keep", "Alex checks out admin access from a supervisor for that task, and the session is logged", "Let Alex use the IT director's account when needed"], a: 1, why: "That's PAM. Sharing someone else's account destroys accountability: the logs would blame the director." },
+    { ctx: acct("Book fair volunteer", "A parent running the school book fair", "A full staff login to the school network."), q: "WHAT and WHICH?", o: ["Use the book fair register and card reader only", "Staff login so they can check the book fair spreadsheet", "View the payment records to double-check card numbers"], a: 0, why: "Card numbers are PCI data. The card reader sends them straight to the processor, so the volunteer never needs to see one." },
+    { ctx: acct("Book fair volunteer", "A parent running the school book fair", "A full staff login to the school network."), q: "The volunteer rings up sales. Who should count and reconcile the money at the end?", o: ["The same volunteer, since they know the sales best", "The school bookkeeper", "Whoever is free that afternoon"], a: 1, why: "Separation of duties: one person handles sales, a different person checks them, so no one can hide a mistake or theft alone." },
+    { q: "Match the tool: \"The person who orders new laptops can't approve the purchase.\"", o: ["Need-to-know", "Separation of duties", "Just-in-time access", "PAM"], a: 1, why: "Splitting a sensitive task between two people is separation of duties." },
+    { q: "Match the tool: \"IT checks out the admin password for one hour, and the session is recorded.\"", o: ["Need-to-know", "Separation of duties", "Just-in-time access", "PAM"], a: 3, why: "Locking up admin accounts, checking them out, and logging every use is PAM." },
+    { q: "Match the tool: \"A counselor can open her own students' files, but not every student's.\"", o: ["Need-to-know", "Separation of duties", "Just-in-time access", "PAM"], a: 0, why: "Her role could allow more, but her task only needs her students. That's need-to-know." },
+  ] } },
+
+{ id: "m3", short: "Data", title: "Data Triage", minutes: 8, code: "TEFCRUw=",
+  goal: "Classify data and explain how its type and state change how it's protected.",
+  brief: `
+  <p class="lede">Organizations label data by how sensitive it is. More sensitive data gets more protection (CED 5.2.A.3). Some data is <b>regulated</b>: a law or industry standard says how it must be stored, sent, and handled.</p>
+  <div class="brief">
+    <div class="bcard"><span class="tag">PII</span><h3 style="margin-top:8px">Personally identifiable information</h3><p>Name, signature, phone, address, email, date of birth, SSN, biometrics (fingerprints, face scans).</p><p class="ex">Privacy Act of 1974 · COPPA for kids under 13</p></div>
+    <div class="bcard"><span class="tag">PHI</span><h3 style="margin-top:8px">Protected health information</h3><p>Test results, treatment records, hospital records, doctor visit notes, and <b>health payment records</b>.</p><p class="ex">HIPAA (1996)</p></div>
+    <div class="bcard"><span class="tag">PCI</span><h3 style="margin-top:8px">Payment card information</h3><p>Cardholder name, account number, expiration date, address, CVV.</p><p class="ex">PCI-DSS (industry standard)</p></div>
+    <div class="bcard"><span class="tag">RECORDS</span><h3 style="margin-top:8px">Student education records</h3><p>Grades, transcripts, report cards, discipline records.</p><p class="ex">In the U.S.: FERPA</p></div>
+  </div>
+  <h3>Data has three states (CED 5.2.A.2)</h3>
+  <div class="brief">
+    <div class="bcard"><h3>At rest</h3><p>Stored on a drive. Protect the drive from theft. Encrypt it so a stolen drive can't be read.</p></div>
+    <div class="bcard"><h3>In transit</h3><p>Moving between devices. Protect the cables. Encrypt it so intercepted data can't be read.</p></div>
+    <div class="bcard"><h3>In use</h3><p>Being processed by software or a person. It must be decrypted to use, so <b>access control</b> does the protecting.</p></div>
+  </div>`,
+  game: { type: "quiz", cols: true, shuffleItems: true, items: [
+    ...[["A student's date of birth and home address", 0], ["Notes from a doctor's visit at an urgent care clinic", 1], ["A card number, expiration date, and CVV from the book fair", 2], ["This week's cafeteria lunch menu", 4], ["A fingerprint scan used to unlock a phone", 0], ["A student's semester report card", 3], ["A dentist's billing record showing what a patient paid", 1], ["A hospital's X-ray results", 1], ["A teacher's school email address", 0], ["The football game schedule", 4]].map(([t, a]) => ({
+      ctx: `<div class="eyebrow">Incoming data</div><div class="prompt" style="margin-top:4px">${t}</div>`, q: "Which bin?", o: ["PII", "PHI", "PCI", "Student record", "Public"], a, why: [
+        "Data that identifies a person is PII. Biometrics and email addresses count too.",
+        "Health information, including health payment records, is PHI under HIPAA.",
+        "Card data is PCI and falls under PCI-DSS.",
+        "Grades and report cards are student education records.",
+        "Anyone may see it, so it's public and not regulated."][a] })),
+    { q: "Which law protects PHI?", o: ["COPPA", "HIPAA", "PCI-DSS", "The Privacy Act of 1974"], a: 1, why: "HIPAA, the Health Insurance Portability and Accountability Act of 1996." },
+    { q: "A website collects the names and emails of 10-year-olds. Which law adds extra protection?", o: ["COPPA", "HIPAA", "PCI-DSS", "FERPA"], a: 0, why: "COPPA covers children under 13 (CED 5.2.A)." },
+    { q: "A laptop holding the gradebook file is stolen from a car. What state was the data in?", o: ["At rest", "In transit", "In use"], a: 0, why: "Stored on a drive = at rest. Drive encryption is the fix." },
+    { q: "A teacher has the gradebook open on screen. What mainly protects it in this state?", o: ["Encryption of the drive", "Encryption of the network", "Access controls on who can view or edit"], a: 2, why: "Data in use must be decrypted to be used, so access control is the protection." },
+  ] } },
+
+{ id: "m4", short: "Levels", title: "Clearance Ladder", minutes: 10, code: "V1VSRA==",
+  goal: "Apply Bell-LaPadula's two rules: no read up, no write down.",
+  brief: `
+  <p class="lede">In <b>mandatory access control (MAC)</b>, an administrator sets a clearance level for every user and a confidentiality level for every file. Users can't change levels or share access. The system enforces the rules (CED 5.2.C.5).</p>
+  <div class="brief">
+    <div class="bcard"><h3>The levels</h3><div class="ladder" style="margin-top:8px">
+      <div style="background:var(--ts)">Top Secret <span>highest</span></div><div style="background:var(--s)">Secret</div><div style="background:var(--c)">Confidential</div><div style="background:var(--u)">Unclassified <span>lowest</span></div></div></div>
+    <div class="bcard"><h3>Rule 1: no read up</h3><p><b>Simple Security Property.</b> Subjects may not read objects above their level.</p><p class="ex">Secret can't read Top Secret.</p>
+      <h3 style="margin-top:14px">Rule 2: no write down</h3><p><b>* (Star) Security Property.</b> Subjects may not write to objects below their level.</p><p class="ex">Why? Writing down leaks secrets into places lower users can read.</p></div>
+    <div class="bcard"><h3>You have Secret clearance</h3><div class="wurd" style="margin-top:8px">
+      <span class="h"></span><span class="h">Read</span><span class="h">Write</span>
+      <span>Top Secret</span><span class="n">No</span><span class="y">Yes</span>
+      <span class="me">Secret</span><span class="y">Yes</span><span class="y">Yes</span>
+      <span>Confidential</span><span class="y">Yes</span><span class="n">No</span>
+      <span>Unclassified</span><span class="y">Yes</span><span class="n">No</span></div>
+      <p class="ex">Write Up, Read Down: <b>WURD</b>. Writing up is like a locked drop box: you can add a tip, but you can't read what's inside.</p></div>
+  </div>
+  <p><b>Watch out:</b> edit, update, paste into, and save to all count as <b>write</b>. Bell-LaPadula is used by governments and militaries to protect confidentiality (CED 5.2.C.6).</p>`,
+  game: { type: "quiz", big: true, shuffleItems: true, items: [
+    ["Secret", "reads", "Confidential", "a report"], ["Confidential", "reads", "Secret", "a memo"], ["Secret", "writes to", "Unclassified", "a public summary"],
+    ["Confidential", "writes to", "Top Secret", "a tip file"], ["Top Secret", "reads", "Unclassified", "a newsletter"], ["Top Secret", "edits", "Secret", "a briefing"],
+    ["Secret", "edits", "Secret", "a mission plan"], ["Unclassified", "writes to", "Confidential", "an incident report"], ["Confidential", "reads", "Top Secret", "a threat assessment"],
+    ["Top Secret", "pastes notes into", "Unclassified", "a press release"],
+  ].map(([s, v, o, what]) => {
+    const isRead = v === "reads";
+    const allowed = isRead ? RANK[s] >= RANK[o] : RANK[s] <= RANK[o];
+    const why = allowed
+      ? (RANK[s] === RANK[o] ? "Same level: reading and writing are both allowed." : isRead ? "Reading down is allowed." : "Writing up is allowed (* Property). They can add to it but still can't read it.")
+      : (isRead ? "No read up (Simple Security Property)." : "No write down (* Property). " + (v === "reads" ? "" : "\"" + v + "\" is a write, and it would leak higher-level information."));
+    return { ctx: `<div class="access"><span class="lvpill" style="background:${LV[s]}">${s} user</span><span class="verb">${v}</span><span class="lvpill" style="background:${LV[o]}">${o}</span><span>${what}</span></div>`, q: "Allow or deny?", o: ["ALLOW", "DENY"], a: allowed ? 0 : 1, why };
+  }) } },
+
+{ id: "m5", short: "Desk", title: "Access Decision Desk", minutes: 12, code: "R0FURUtFRVBFUg==",
+  goal: "Use every decision factor to allow or deny a request, and name the model making the call.",
+  brief: `
+  <p class="lede">You are the access control system. A request is <b>subject + operation + object</b>. Before you answer, you check the <b>factors</b>.</p>
+  <div class="brief">
+    <div class="bcard"><h3>Who</h3><p>Identity, role, clearance level.</p></div>
+    <div class="bcard"><h3>What data</h3><p>How sensitive? Regulated (PII, PHI, PCI)?</p></div>
+    <div class="bcard"><h3>Which operation</h3><p>Access, modify, add, or remove.</p></div>
+    <div class="bcard"><h3>Context</h3><p>Time, location, device.</p></div>
+    <div class="bcard"><h3>Rules</h3><p>Organization rules checked on top of the model.</p></div>
+  </div>
+  <h3>Which model is making the call?</h3>
+  <div class="brief">
+    <div class="bcard"><span class="tag">RBAC</span><p style="margin-top:6px">Your <b>role</b> decides. Only the accountant role opens payroll. (5.2.C.2)</p></div>
+    <div class="bcard"><span class="tag">RuBAC</span><p style="margin-top:6px">A set of <b>rules</b> decides, usually <b>layered on top of another model</b>. Even an authorized user is denied outside working hours. (5.2.C.3)</p></div>
+    <div class="bcard"><span class="tag">DAC</span><p style="margin-top:6px">The <b>owner</b> decides who gets access to their files. Admins can override. (5.2.C.4)</p></div>
+    <div class="bcard"><span class="tag">MAC</span><p style="margin-top:6px">An <b>administrator</b> sets levels and the system enforces them. Bell-LaPadula is a MAC model. (5.2.C.5)</p></div>
+  </div>`,
+  game: { type: "quiz", items: [] } },
+
+{ id: "m6", short: "Audit", title: "Final Audit", minutes: 8, code: "Q0xFQVJFRA==",
+  goal: "Eight AP-style questions. Your first-try score is your exit ticket.",
+  brief: `<p class="lede">This is your exit ticket. Read every choice before you click; AP questions often have more than one answer that sounds right, and you want the <b>BEST</b> one. Your first click on each question is the one that counts.</p>`,
+  game: { type: "quiz", items: [
+    { q: "Riverside Hospital uses role-based access control so nurses can view patient records. After an incident, IT adds a policy: records can be opened only between 6 a.m. and 10 p.m. and only from hospital workstations. Which statement BEST describes this change?", o: ["The hospital replaced RBAC with MAC because records now have confidentiality levels.", "A rule-based layer was added on top of RBAC, so a nurse with the right role can still be denied because of time or device.", "The hospital switched to DAC so each nurse decides who can see their patients' records.", "Least privilege no longer applies because every nurse has the same access."], a: 1, why: "RuBAC checks rules like time and device and is typically layered on another model (CED 5.2.C.3). The role still matters; the rule can override it." },
+    { q: "A government agency uses the Bell-LaPadula model. An analyst has Secret clearance. Which action will the system ALLOW?", o: ["Reading a Top Secret threat assessment to prepare for a meeting", "Copying a paragraph from a Secret report into an Unclassified public summary", "Adding notes to a Top Secret file", "Editing a Confidential training manual to fix a typo"], a: 2, why: "Writing up is allowed. A breaks no read up. B and D are both write down, which is denied even for a harmless typo fix." },
+    { q: "A clinic's front-desk receptionist schedules appointments, which needs each patient's name, phone number, and appointment times. Which access setup BEST applies least privilege?", o: ["View and edit the scheduling fields only (name, phone, appointment time), with no access to test results or treatment notes", "View and edit the full patient record so the receptionist can fix any mistake they notice", "View-only access to the full patient record so the receptionist can't change medical data", "The same access as the nurses so the front desk can answer patients' questions"], a: 0, why: "Exactly what the job needs. View-only (C) limits the operation but still exposes PHI the receptionist doesn't need." },
+    { q: "\"The grading app updates Maya's quiz score in the gradebook.\" In this request, what is the subject?", o: ["Maya", "The gradebook", "Updating the score", "The grading app"], a: 3, why: "The subject is whoever or whatever makes the request. Applications can be subjects (CED 5.2.C.1). The gradebook is the object; updating is the operation." },
+    { q: "A dentist's office stores each patient's payment history for past cleanings. How should this data be classified?", o: ["PCI, because it is about payments", "PHI, because it is a health provider payment record", "Public, because it contains no diagnosis", "PII only, because it includes names"], a: 1, why: "The CED lists health provider payment records as PHI, protected under HIPAA." },
+    { q: "Which statement about data in use is MOST accurate?", o: ["It is protected mainly by encrypting the drive it's stored on.", "It is safe because it never leaves the device.", "It only needs protection while it moves across the network.", "It must be decrypted to be used, so access controls that limit who can view or edit it are the main protection."], a: 3, why: "Encryption protects data at rest and in transit. Once data is in use it's decrypted, so access control does the work (CED 5.2.A.2)." },
+    { q: "Maya created design.txt. She gives Leo edit access and Sam view-only access. Which model is this, and who else could override her settings?", o: ["DAC; an administrator or super user", "MAC; no one can override", "RBAC; anyone in Maya's role", "RuBAC; the rule engine"], a: 0, why: "In DAC the owner sets access, and administrators or super users can override it (CED 5.2.C.4)." },
+    { q: "A school gives its IT intern a domain admin account \"just in case\" for the whole summer. Which change BEST fixes this?", o: ["Keep domain admin but require a longer password", "Let the intern share the IT director's account for admin tasks", "Give the intern a help desk role that can reset student passwords, and have them check out admin access through PAM when a task needs it", "Remove all of the intern's access so there's no risk"], a: 2, why: "Least privilege: just the role the job needs, with admin rights checked out and logged. D is too little access (the job breaks), and B destroys accountability." },
+  ] } },
+];
+
+function acct(name, role, now) {
+  return `<div class="dossier"><div><span class="k">Account</span><span class="v">${name}</span></div><div><span class="k">Job</span><span class="v">${role}</span></div><div class="rule"><span class="k">Too many keys right now</span><span class="v">${now}</span></div></div>`;
+}
+function dos(f) {
+  return `<div class="dossier">${f.map(([k, v, cls]) => `<div${cls ? ` class="${cls}"` : ""}><span class="k">${k}</span><span class="v">${v}</span></div>`).join("")}</div>`;
+}
+const MODELS = ["RBAC (role)", "RuBAC rule layered on RBAC", "DAC (owner decides)", "MAC (Bell-LaPadula)", "Need-to-know / least privilege"];
+const DESK = [
+  { f: [["Subject", "Nurse Patel"], ["Role", "Nurse, 4th floor"], ["Operation", "View"], ["Object", "Chart of a patient on her floor"], ["Data label", "PHI"], ["Context", "10:05 a.m. · clinic workstation"], ["Rule in effect", "PHI may be opened only on clinic devices.", "rule"]], d: 0, m: 0, dw: "Her role allows it, it's her patient, and the context is normal.", mw: "The nurse role grants chart access. The rule is satisfied, so the role makes the call." },
+  { f: [["Subject", "Nurse Patel"], ["Role", "Nurse, 4th floor"], ["Operation", "View"], ["Object", "The same patient's chart"], ["Data label", "PHI"], ["Context", "2:47 a.m. · personal laptop at home"], ["Rule in effect", "PHI may be opened only on clinic devices.", "rule"]], d: 1, m: 1, dw: "Same nurse, same chart, but the context breaks the rule.", mw: "The role says yes; the rule layered on top says no. That's RuBAC on RBAC." },
+  { f: [["Subject", "Dev"], ["Role", "Accountant"], ["Operation", "Add this week's hours"], ["Object", "Payroll software"], ["Context", "2:00 p.m. · office PC"], ["Policy", "A second person must approve every payroll run.", "rule"]], d: 2, m: 0, dw: "Dev can enter payroll, but separation of duties means someone else approves it.", mw: "The accountant role is what grants payroll access (the CED's own RBAC example)." },
+  { f: [["Subject", "Leo and Sam"], ["Owner", "Maya created robotics/design.txt"], ["Operation", "Maya gives Leo edit, Sam view-only"], ["Object", "robotics/design.txt"], ["Context", "Shared folder on the team drive"]], d: 0, m: 2, dw: "The owner chose to share it, and she's allowed to.", mw: "The owner decides who gets access: DAC." },
+  { f: [["Subject", "Analyst"], ["Clearance", "Secret"], ["Operation", "Save (write)"], ["Object", "Unclassified shared folder"], ["Data", "Notes from a Secret briefing"], ["Context", "Agency workstation, 11 a.m."]], d: 1, m: 3, dw: "Saving Secret notes to an Unclassified folder is writing down.", mw: "Clearance levels set by an administrator, enforced by the system: MAC, using Bell-LaPadula's * Property." },
+  { f: [["Subject", "Book fair volunteer"], ["Role", "Volunteer cashier"], ["Operation", "View"], ["Object", "Full card numbers from today's sales"], ["Data label", "PCI"], ["Reason given", "\"I want to double-check the totals.\""]], d: 1, m: 4, dw: "Totals don't require card numbers, and card numbers are PCI.", mw: "The job doesn't need this data: need-to-know and least privilege." },
+];
+M[4].game.items = DESK.flatMap((x, i) => [
+  { ctx: `<div class="eyebrow">Request ${i + 1} of ${DESK.length}</div>` + dos(x.f), q: "Your decision?", o: ["ALLOW", "DENY", "ALLOW WITH LIMITS"], a: x.d, why: x.dw, big: true },
+  { ctx: `<div class="eyebrow">Request ${i + 1} of ${DESK.length}</div>` + dos(x.f), q: "What is making the call here?", o: MODELS, a: x.m, why: x.mw },
+]);
+
+/* labels for the report's "missed on first try" list */
+const strip = (h) => h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+M[1].game.items.forEach((it) => { const n = it.ctx && it.ctx.match(/class="v">([^<]+)/); it.lbl = n ? n[1] + ": " + it.q : it.q.replace(/^Match the tool: /, "Tool match: "); });
+M[2].game.items.forEach((it) => { const t = it.ctx && it.ctx.match(/class="prompt"[^>]*>([^<]+)/); it.lbl = t ? t[1] : it.q; });
+M[3].game.items.forEach((it) => { it.lbl = strip(it.ctx); });
+M[4].game.items.forEach((it, j) => { it.lbl = "Request " + (Math.floor(j / 2) + 1) + (j % 2 ? ": which model" : ": decision"); });
+M[5].game.items.forEach((it, j) => { it.lbl = "Question " + (j + 1); });
+
+/* ---------- state ---------- */
+const KEY = "clearance-quest-v1";
+let S = { name: "", done: {}, view: "home" };
+try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && typeof v === "object") S = Object.assign(S, v); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const unlocked = (i) => i === 0 || !!S.done[M[i - 1].id];
+const app = document.getElementById("app");
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function badges() {
+  const nav = document.getElementById("badges");
+  nav.innerHTML = "";
+  M.forEach((m, i) => {
+    const b = document.createElement("button");
+    b.className = "badge" + (S.done[m.id] ? " done" : "") + (S.view === m.id ? " on" : "");
+    b.textContent = i + 1; b.title = "Mission " + (i + 1) + ": " + m.title; b.setAttribute("aria-label", b.title);
+    b.disabled = !unlocked(i);
+    b.onclick = () => go(m.id);
+    nav.appendChild(b);
+  });
+  const r = document.createElement("button");
+  r.className = "badge" + (S.view === "report" ? " on" : ""); r.textContent = "★"; r.title = "Mission report"; r.setAttribute("aria-label", "Mission report");
+  r.onclick = () => go("report"); nav.appendChild(r);
+}
+function go(v) { S.view = v; save(); render(); window.scrollTo(0, 0); }
+function render() { badges(); if (S.view === "home") home(); else if (S.view === "report") report(); else mission(M.findIndex((m) => m.id === S.view)); }
+
+/* ---------- home ---------- */
+function home() {
+  const next = M.findIndex((m) => !S.done[m.id]);
+  app.innerHTML = `<div class="stack">
+    <section class="hero">
+      <div class="stack" style="gap:12px">
+        <div class="eyebrow">Challenge 2.2 · Least privilege & access decisions</div>
+        <h1>Clearance Quest</h1>
+        <p class="lede">Six missions. Each one starts with a short briefing, then a game. Finish a mission to earn its code word. Write every code word on your answer sheet.</p>
+      </div>
+      <div class="idcard">
+        <span class="lbl">Agent name (first and last)</span>
+        <input id="nm" autocomplete="off" value="${esc(S.name)}" placeholder="Type your name" ${Object.keys(S.done).length ? "disabled" : ""}>${Object.keys(S.done).length ? `<span class="lbl">Name is locked once you finish a mission</span>` : ""}
+        <div class="lv"><span style="background:var(--u)"></span><span style="background:var(--c)"></span><span style="background:var(--s)"></span><span style="background:var(--ts)"></span></div>
+        <button class="btn" id="start" style="background:var(--panel);color:var(--navy)">${next === -1 ? "View mission report" : next === 0 ? "Start Mission 1" : "Continue: Mission " + (next + 1)}</button>
+      </div>
+    </section>
+    <div class="howto">
+      <div><b>Read the briefing</b>It's short and it has everything you need. You can reopen it during the game.</div>
+      <div><b>Play the game</b>Wrong answers explain why. Your first try on each question is what gets scored.</div>
+      <div><b>Collect code words</b>Write each code word and answer the short questions on your answer sheet.</div>
+      <div><b>Screenshot your report</b>The ★ report at the end shows your scores. Submit it with your answer sheet.</div>
+    </div>
+    <div class="mlist">${M.map((m, i) => `<div class="mitem${S.done[m.id] ? " done" : ""}"><span class="n">${i + 1}</span><div><b>${m.title}</b><small>${m.goal} · about ${m.minutes} min</small></div></div>`).join("")}</div>
+  </div>`;
+  const nm = document.getElementById("nm");
+  nm.oninput = () => { S.name = nm.value.slice(0, 60); save(); };
+  document.getElementById("start").onclick = () => {
+    if (!S.name.trim()) { nm.focus(); nm.placeholder = "Type your name first"; nm.classList.add("shake"); setTimeout(() => nm.classList.remove("shake"), 400); return; }
+    go(next === -1 ? "report" : M[next].id);
+  };
+}
+
+/* ---------- mission ---------- */
+function mission(i) {
+  const m = M[i];
+  if (!unlocked(i)) return go("home");
+  const done = S.done[m.id];
+  app.innerHTML = `<div class="stack">
+    <div class="card stack">
+      <div class="eyebrow">Mission ${i + 1} of ${M.length} · about ${m.minutes} min</div>
+      <h2 style="font-size:clamp(28px,4.5vw,40px);color:var(--navy)">${m.title}</h2>
+      <p class="lede">${m.goal}</p>
+      <div class="stack" id="brief">${m.brief}</div>
+      <div class="row"><button class="btn" id="play">${done ? "Replay the game" : "I've read it. Start the game"}</button>${done ? `<button class="btn ghost" id="skip">See my code word</button>` : ""}</div>
+    </div>
+    <div id="game"></div>
+  </div>`;
+  document.getElementById("play").onclick = () => startGame(i);
+  if (done) document.getElementById("skip").onclick = () => finish(i, null);
+}
+function shell(i, inner) {
+  const m = M[i];
+  const g = document.getElementById("game");
+  g.innerHTML = `<div class="card stack">
+    <details class="review"><summary>Reopen the briefing</summary><div class="stack">${m.brief}</div></details>
+    ${inner}</div>`;
+  return g;
+}
+function startGame(i) {
+  document.getElementById("brief").parentElement.style.display = "none";
+  const m = M[i];
+  const res = { first: 0, total: 0, miss: [], t0: Date.now() };
+  if (m.game.shuffleItems) res.items = m.game.items.slice().sort(() => Math.random() - 0.5);
+  if (m.game.type === "chips") chips(i, res); else quiz(i, res, 0);
+}
+function head(i, k, n, res) {
+  return `<div class="gamehead"><h3>${M[i].title}</h3><span class="meter">${k + 1} / ${n} · first-try ${res.first}/${res.total}</span></div><div class="bar"><i style="width:${(k / n) * 100}%"></i></div>`;
+}
+
+function quiz(i, res, k) {
+  const m = M[i], items = res.items || m.game.items;
+  if (k >= items.length) return finish(i, res);
+  let it = items[k];
+  if (m.game.shuffle) { const ord = it.o.map((_, j) => j).sort(() => Math.random() - 0.5); it = Object.assign({}, it, { o: ord.map((j) => it.o[j]), a: ord.indexOf(it.a) }); }
+  const big = it.big || m.game.big;
+  const g = shell(i, `${head(i, k, items.length, res)}
+    ${it.ctx ? `<div>${it.ctx}</div>` : ""}
+    <div class="prompt">${it.q}</div>
+    <div class="opts${big || m.game.cols ? " cols" : ""}" id="opts">${it.o.map((o, j) => `<button class="opt${big ? " big" : ""}" data-j="${j}">${o}</button>`).join("")}</div>
+    <div id="fb" aria-live="polite"></div>`);
+  let tried = false;
+  g.querySelectorAll(".opt").forEach((b) => b.onclick = () => {
+    const j = +b.dataset.j, fb = document.getElementById("fb");
+    if (!tried) { tried = true; res.total++; if (j === it.a) res.first++; else res.miss.push(it.lbl || it.q); }
+    if (j === it.a) {
+      b.classList.add("right");
+      g.querySelectorAll(".opt").forEach((x) => x.disabled = true);
+      fb.innerHTML = `<div class="fb ok stack" style="gap:10px"><p><b>Correct.</b> ${it.why}</p><div><button class="btn" id="nx">${k + 1 < items.length ? "Next" : "Finish mission"}</button></div></div>`;
+      document.getElementById("nx").onclick = () => quiz(i, res, k + 1);
+      document.getElementById("nx").focus();
+    } else {
+      b.classList.add("wrong", "shake"); b.disabled = true;
+      fb.innerHTML = `<div class="fb no"><b>Not that one.</b> Try again. Hint: ${hintFor(it)}</div>`;
+    }
+  });
+}
+function hintFor(it) {
+  if (it.o.length === 2) return "say the rule out loud: no read UP, no write DOWN.";
+  if (it.o[0] === "PII") return "is it identity, health, card, school record, or open to anyone?";
+  if (it.o === MODELS) return "who decides here: a role, a rule, the owner, an administrator's levels, or the job's need?";
+  return "reread the briefing card for this idea, then look for the choice that gives exactly what's needed.";
+}
+
+function chips(i, res) {
+  const items = M[i].game.items;
+  let k = 0;
+  const NAMES = ["SUBJECT", "OPERATION", "OBJECT"];
+  const step = () => {
+    if (k >= items.length) return finish(i, res);
+    const parts = items[k];
+    const order = [0, 1, 2].sort(() => Math.random() - 0.5);
+    const placed = [null, null, null]; // bin -> part index
+    let sel = null, tried = false;
+    const draw = (bad) => {
+      const g = shell(i, `${head(i, k, items.length, res)}
+        <p>Tap a piece of the request, then tap the bin it belongs in. Fill all three bins, then check.</p>
+        <div class="sentence" id="sent">${order.filter((p) => !placed.includes(p)).map((p) => `<button class="chipb${sel === p ? " sel" : ""}" data-p="${p}">${parts[p]}</button>`).join("") || `<span class="meter">All pieces placed.</span>`}</div>
+        <div class="bins">${NAMES.map((n, b) => `<button class="bin ${["s", "o", "b"][b]}" data-b="${b}"><span class="t">${n}</span><span class="d">${["who or what is asking", "access · modify · add · remove", "the file or application"][b]}</span>${placed[b] !== null ? `<span class="placed${bad && bad[b] ? " bad" : ""}">${parts[placed[b]]}</span>` : ""}</button>`).join("")}</div>
+        <div class="row"><button class="btn" id="chk" ${placed.includes(null) ? "disabled" : ""}>Check</button><button class="btn ghost" id="clr">Clear</button></div>
+        <div id="fb" aria-live="polite"></div>`);
+      g.querySelectorAll(".chipb").forEach((c) => c.onclick = () => { sel = +c.dataset.p; draw(); });
+      g.querySelectorAll(".bin").forEach((bn) => bn.onclick = () => {
+        const b = +bn.dataset.b;
+        if (sel !== null) { if (placed[b] !== null) { /* swap back */ } placed[b] = sel; sel = null; draw(); }
+        else if (placed[b] !== null) { placed[b] = null; draw(); }
+      });
+      document.getElementById("clr").onclick = () => { placed.fill(null); sel = null; draw(); };
+      document.getElementById("chk").onclick = () => {
+        const wrong = placed.map((p, b) => p !== b);
+        if (!tried) { tried = true; res.total++; if (!wrong.some(Boolean)) res.first++; else res.miss.push("Request " + (k + 1) + ": " + parts.join(" ")); }
+        if (!wrong.some(Boolean)) {
+          draw();
+          const fb = document.getElementById("fb");
+          g.querySelectorAll("button.bin, .chipb, #chk, #clr").forEach((x) => x.disabled = true);
+          fb.innerHTML = `<div class="fb ok stack" style="gap:10px"><p><b>Correct.</b> Subject: <b>${parts[0]}</b> · Operation: <b>${parts[1]}</b> · Object: <b>${parts[2]}</b></p><div><button class="btn" id="nx">${k + 1 < items.length ? "Next request" : "Finish mission"}</button></div></div>`;
+          document.getElementById("nx").onclick = () => { k++; step(); };
+          document.getElementById("nx").focus();
+        } else {
+          wrong.forEach((w, b) => { if (w) placed[b] = null; });
+          draw(wrong);
+          document.getElementById("fb").innerHTML = `<div class="fb no"><b>Some pieces bounced back.</b> Remember: the subject can be an app, and the object is the thing being acted on.</div>`;
+        }
+      };
+    };
+    draw();
+  };
+  step();
+}
+
+function finish(i, res) {
+  const m = M[i];
+  const prev = S.done[m.id];
+  if (res && !prev) { S.done[m.id] = { first: res.first, total: res.total, miss: res.miss, mins: Math.max(1, Math.round((Date.now() - res.t0) / 60000)), at: new Date().toISOString() }; save(); }
+  const rec = S.done[m.id];
+  badges();
+  const nextI = i + 1 < M.length ? i + 1 : null;
+  const g = document.getElementById("game");
+  document.getElementById("brief").parentElement.style.display = "none";
+  g.innerHTML = `<div class="card stack" style="text-align:center;align-items:center">
+    <div class="eyebrow">Mission ${i + 1} complete</div>
+    <h2 style="font-size:32px;color:var(--navy)">${m.title}</h2>
+    <div class="score">${rec.first}/${rec.total}</div>
+    <p class="meter">correct on the first try${res && prev ? " (your first run is the one that's recorded)" : ""}</p>
+    <p>Your personal code word:</p>
+    <div class="code">${pcode(m, S.name)}</div>
+    <p class="lede" style="text-align:center">This code only works for <b>${esc(S.name)}</b>. Someone else's code won't match your name. Write it on your answer sheet now, and answer the Mission ${i + 1} question there.</p>
+    <div class="row" style="justify-content:center">${nextI !== null ? `<button class="btn" id="nx">Go to Mission ${nextI + 1}: ${M[nextI].title}</button>` : `<button class="btn" id="nx">See my mission report</button>`}</div>
+  </div>`;
+  document.getElementById("nx").onclick = () => go(nextI !== null ? M[nextI].id : "report");
+}
+
+/* ---------- report ---------- */
+function report() {
+  const tot = M.reduce((a, m) => a + (S.done[m.id] ? S.done[m.id].first : 0), 0);
+  const all = M.reduce((a, m) => a + (S.done[m.id] ? S.done[m.id].total : 0), 0);
+  const fin = M.every((m) => S.done[m.id]);
+  const audit = S.done.m6;
+  app.innerHTML = `<div class="card stack">
+    <div class="eyebrow">Mission report</div>
+    <h2 style="font-size:clamp(28px,4.5vw,40px);color:var(--navy)">${esc(S.name || "Unnamed agent")}</h2>
+    <p class="lede">${fin ? "All six missions complete. Take a screenshot of this page and submit it with your answer sheet." : "Finish every mission to complete your report. Unfinished missions show a dash."}</p>
+    <div class="tbl"><table class="rep"><thead><tr><th>Mission</th><th>First-try score</th><th>Minutes</th><th>Personal code</th></tr></thead><tbody>
+    ${M.map((m, i) => { const d = S.done[m.id]; return `<tr><td>${i + 1}. ${m.title}</td><td>${d ? d.first + "/" + d.total : "–"}</td><td>${d && d.mins ? d.mins : "–"}</td><td class="mono">${d ? pcode(m, S.name) : "–"}</td></tr>`; }).join("")}
+    </tbody></table></div>
+    <div class="stack" style="gap:8px"><h3>Missed on the first try</h3>
+    ${M.map((m, i) => { const d = S.done[m.id]; if (!d) return ""; const ms = d.miss || []; return `<p style="font-size:14px"><b>${i + 1}. ${m.title}:</b> ${ms.length ? ms.map(esc).join(" · ") : "none"}</p>`; }).join("")}</div>
+    <div class="row"><div><div class="eyebrow">Total first-try</div><div class="score">${tot}/${all || 0}</div></div><div style="margin-left:24px"><div class="eyebrow">Exit ticket (Final Audit)</div><div class="score">${audit ? audit.first + "/" + audit.total : "–"}</div></div></div>
+    <p class="stamp">Report generated ${new Date().toLocaleString()}</p>
+    <div class="row"><button class="btn ghost" id="hm">Back to start</button></div>
+  </div>`;
+  document.getElementById("hm").onclick = () => go("home");
+}
+
+/* ---------- teacher check (open the link with #teacher at the end) ---------- */
+function teacher() {
+  document.getElementById("badges").innerHTML = "";
+  app.innerHTML = `<div class="card stack">
+    <div class="eyebrow">Teacher check</div><h2 style="font-size:32px;color:var(--navy)">Verify personal code words</h2>
+    <div class="row"><input id="pin" type="password" inputmode="numeric" placeholder="PIN" style="font:600 18px var(--body);padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);width:140px"><button class="btn" id="unlock">Unlock</button></div>
+    <div id="tpanel"></div></div>`;
+  document.getElementById("unlock").onclick = () => {
+    if (document.getElementById("pin").value !== dec("NDcyMQ==")) { document.getElementById("tpanel").innerHTML = `<p class="fb no">That PIN doesn't match.</p>`; return; }
+    document.getElementById("tpanel").innerHTML = `<div class="stack"><p>Type each student's name exactly as they typed it (capitals, spaces, and punctuation don't matter), one per line.</p>
+      <textarea id="names" rows="5" style="font:16px var(--body);padding:10px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);width:100%"></textarea>
+      <div><button class="btn" id="show">Show codes</button></div><div id="codes" class="tbl"></div></div>`;
+    document.getElementById("show").onclick = () => {
+      const names = document.getElementById("names").value.split("\n").map((x) => x.trim()).filter(Boolean);
+      document.getElementById("codes").innerHTML = `<table class="rep"><thead><tr><th>Name</th>${M.map((m, i) => `<th>M${i + 1}</th>`).join("")}</tr></thead><tbody>${names.map((n) => `<tr><td>${esc(n)}</td>${M.map((m) => `<td class="mono">${pcode(m, n)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+    };
+  };
+}
+if (location.hash === "#teacher") teacher(); else render();
+window.addEventListener("hashchange", () => { if (location.hash === "#teacher") teacher(); });
+})();
+</script>
+
+</body>
+</html>
