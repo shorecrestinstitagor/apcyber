@@ -1,15 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
-
-  <head>
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AP Cybersecurity Labs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-/* Layout: Title band, then one card per lab, newest first. */
+/* Layout: a simple class hub. Title band, then one card per lab, newest first. */
 :root {
   --bg: #F3F5F7; --panel: #FFFFFF; --ink: #17222E; --muted: #5B6875; --line: #D6DEE6;
   --navy: #14324A; --teal: #0F766E; --teal-soft: #DDF0EE; --slate: #3B5B8C; --slate-soft: #E1E8F3; --rust: #B4532A;
@@ -53,12 +51,25 @@ footer { color: var(--muted); font-size: 14px; }
   <header>
     <div class="eyebrow">Shorecrest · AP Cybersecurity</div>
     <h1>AP Cybersecurity Labs</h1>
-    <p class="lede">Hands-on labs for Challenge 2.2, Authorization and Access Control. Open the one your teacher assigned.</p>
+    <p class="lede">Hands-on labs for AP Cybersecurity. Open the one your teacher assigned.</p>
   </header>
 
   <section class="labs" aria-label="Labs">
+    <a class="lab" href="site-walk.html">
+      <div class="top"><span class="pill new">Unit 2 · New</span><span class="eyebrow">6 missions · 1 class</span></div>
+      <h2>Site Walk</h2>
+      <p>Secure Harbor Robotics: learn why physical access matters, walk the building, and catch intruders in the logs.</p>
+      <ul>
+        <li>Card cloning and layered physical controls</li>
+        <li>Rating physical risks and choosing controls</li>
+        <li>Cameras, motion sensors, guards</li>
+        <li>Reading badge and door logs</li>
+        <li>Prioritizing by severity and cost</li>
+      </ul>
+      <span class="go">Start Site Walk &rarr;</span>
+    </a>
     <a class="lab" href="clearance-quest.html">
-      <div class="top"><span class="pill new">Challenge 2.2 · New</span><span class="eyebrow">6 missions · 1 class</span></div>
+      <div class="top"><span class="pill">Challenge 2.2</span><span class="eyebrow">6 missions · 1 class</span></div>
       <h2>Clearance Quest</h2>
       <p>Briefings and games on least privilege and how access decisions get made.</p>
       <ul>
